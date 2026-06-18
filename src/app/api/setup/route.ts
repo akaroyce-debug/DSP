@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
+import { sql } from "drizzle-orm";
 import { createClient } from "@libsql/client";
 import { products, type NewProduct } from "@/lib/db/schema";
 
@@ -11,8 +11,7 @@ const seedProducts: NewProduct[] = [
   {
     name: "Aurum Core",
     slug: "aurum-core",
-    shortDescription:
-      "The reference processing engine. Mastering-grade clarity, distilled.",
+    shortDescription: "The reference processing engine. Mastering-grade clarity, distilled.",
     description:
       "Aurum Core is the foundation of the RoyceDSP ecosystem — a zero-latency processing engine engineered around a 64-bit floating-point path and oversampled nonlinearities. It listens before it touches, profiling the program material in real time and adapting its transfer curve to preserve transient integrity while resolving the densest mixes with effortless headroom. Built for mastering, trusted in tracking.",
     price: 34900,
@@ -143,10 +142,42 @@ export async function GET(req: NextRequest) {
   const db = drizzle(client);
 
   try {
-    await migrate(db, { migrationsFolder: "./drizzle" });
+    // Run DDL inline — no file system dependency on Vercel
+    await db.run(sql`CREATE TABLE IF NOT EXISTS \`orders\` (
+      \`id\` text PRIMARY KEY NOT NULL,
+      \`customer_email\` text NOT NULL,
+      \`items\` text DEFAULT '[]' NOT NULL,
+      \`total_amount\` integer DEFAULT 0 NOT NULL,
+      \`currency\` text DEFAULT 'USD' NOT NULL,
+      \`status\` text DEFAULT 'pending' NOT NULL,
+      \`shipping_info\` text,
+      \`stripe_session_id\` text,
+      \`created_at\` text DEFAULT (current_timestamp) NOT NULL
+    )`);
+
+    await db.run(sql`CREATE TABLE IF NOT EXISTS \`products\` (
+      \`id\` text PRIMARY KEY NOT NULL,
+      \`name\` text NOT NULL,
+      \`slug\` text NOT NULL,
+      \`short_description\` text NOT NULL,
+      \`description\` text DEFAULT '' NOT NULL,
+      \`price\` integer DEFAULT 0 NOT NULL,
+      \`currency\` text DEFAULT 'USD' NOT NULL,
+      \`category\` text DEFAULT 'Core DSP' NOT NULL,
+      \`media\` text DEFAULT '[]' NOT NULL,
+      \`features\` text DEFAULT '[]' NOT NULL,
+      \`in_stock\` integer DEFAULT true NOT NULL,
+      \`sort_order\` integer DEFAULT 0 NOT NULL,
+      \`created_at\` text DEFAULT (current_timestamp) NOT NULL,
+      \`updated_at\` text DEFAULT (current_timestamp) NOT NULL
+    )`);
+
+    await db.run(sql`CREATE UNIQUE INDEX IF NOT EXISTS \`products_slug_unique\` ON \`products\` (\`slug\`)`);
+
     await db.delete(products);
     await db.insert(products).values(seedProducts);
-    return NextResponse.json({ ok: true, message: "Migration and seed complete. 6 products inserted." });
+
+    return NextResponse.json({ ok: true, message: "Tables created and 6 products seeded." });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
