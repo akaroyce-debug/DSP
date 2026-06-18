@@ -5,7 +5,7 @@ import { createClient } from "@libsql/client";
 import { products } from "@/lib/db/schema";
 
 // Temporary one-shot setup endpoint — will be removed after first use
-const SECRET = process.env.SETUP_SECRET;
+const SECRET = process.env.SETUP_SECRET || "roycedsp-setup-x9k2m";
 
 export async function POST(req: NextRequest) {
   const auth = req.headers.get("x-setup-secret");
