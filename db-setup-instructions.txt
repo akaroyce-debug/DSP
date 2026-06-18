@@ -1,0 +1,37 @@
+RoyceDSP — Database Setup Instructions
+=======================================
+
+Run these commands to create the database tables and seed the 6 example products.
+Replace the placeholder values with your real Turso credentials.
+
+OPTION A — Inline credentials (no .env.local needed):
+------------------------------------------------------
+TURSO_DATABASE_URL="libsql://your-db-name.turso.io" \
+TURSO_AUTH_TOKEN="your-token-here" \
+npm run db:migrate
+
+TURSO_DATABASE_URL="libsql://your-db-name.turso.io" \
+TURSO_AUTH_TOKEN="your-token-here" \
+npm run db:seed
+
+
+OPTION B — Using .env.local:
+-----------------------------
+1. Add these lines to /home/user/DSP/.env.local:
+
+   TURSO_DATABASE_URL=libsql://your-db-name.turso.io
+   TURSO_AUTH_TOKEN=your-token-here
+
+2. Then run:
+   npm run db:migrate
+   npm run db:seed
+
+
+Where to find your Turso credentials:
+--------------------------------------
+- Log in at https://turso.tech
+- Go to your database → Settings → Connection URLs
+- TURSO_DATABASE_URL = the libsql:// URL
+- TURSO_AUTH_TOKEN   = generate a token under "Tokens" tab
+
+After running both commands the site at dsp-delta.vercel.app will be fully working.
