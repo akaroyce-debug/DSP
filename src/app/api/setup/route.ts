@@ -131,8 +131,8 @@ const seedProducts: NewProduct[] = [
   },
 ];
 
-export async function POST(req: NextRequest) {
-  const auth = req.headers.get("x-setup-secret");
+export async function GET(req: NextRequest) {
+  const auth = req.nextUrl.searchParams.get("secret");
   if (auth !== SECRET) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
